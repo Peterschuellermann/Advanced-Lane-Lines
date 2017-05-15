@@ -32,23 +32,44 @@ def calibration():
         if ret == True:
             imgpoints.append(corners)
             objpoints.append(objp)
-            # Draw and display the corners
-            # img = cv2.drawChessboardCorners(img, (8, 6), corners, ret)
+
     return cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
 
 
-ret, mtx, dist, rvecs, tvecs = calibration()
-print("generated calibration data!")
 
-
-def preprocess_image(image):
+def process_image(image):
     undistorted = cv2.undistort(image, mtx, dist, None, mtx)
-    return undistorted
+    warped = warp_image(undistorted, warp_matrix)
+    return warped
+
+def generate_warp_config():
+
+
+    src = np.float32([[0, 670], [1280, 670], [0, 450], [1280, 450]])
+    dst = np.float32([[570, 220], [710, 220], [0, 0], [1280, 0]])
+
+    warp_matrix = cv2.getPerspectiveTransform(src, dst)
+    warp_matrix_inverse = cv2.getPerspectiveTransform(dst, src)
+    return warp_matrix, warp_matrix_inverse
+
+
+def warp_image(image, warp_matrix):
+    img_size = (image.shape[1], image.shape[0])
+
+    warped = cv2.warpPerspective(image, warp_matrix, img_size, flags=cv2.INTER_LINEAR)
+
+    return warped
+
+
+
+ret, mtx, dist, rvecs, tvecs = calibration()
+print("Generated calibration data!")
+warp_matrix, warp_matrix_inverse = generate_warp_config()
 
 
 video = VideoFileClip("project_video.mp4")
 
-video_processed = video.fl_image(preprocess_image) #NOTE: this function expects color images!!
+video_processed = video.fl_image(process_image) #NOTE: this function expects color images!!
 
 video_processed.write_videofile("project_output.mp4", audio=False)
 
