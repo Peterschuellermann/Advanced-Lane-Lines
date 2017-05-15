@@ -32,17 +32,25 @@ def calibration():
         if ret == True:
             imgpoints.append(corners)
             objpoints.append(objp)
-            print(".")
             # Draw and display the corners
             # img = cv2.drawChessboardCorners(img, (8, 6), corners, ret)
-
     return cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
 
 
 ret, mtx, dist, rvecs, tvecs = calibration()
+print("generated calibration data!")
 
-# image = cv2.cvtColor(mpimg.imread(images[0]), cv2.COLOR_BGR2GRAY)
-# dst = cv2.undistort(image, mtx, dist, None, mtx)
+
+def preprocess_image(image):
+    undistorted = cv2.undistort(image, mtx, dist, None, mtx)
+    return undistorted
+
+
+video = VideoFileClip("project_video.mp4")
+
+video_processed = video.fl_image(preprocess_image) #NOTE: this function expects color images!!
+
+video_processed.write_videofile("project_output.mp4", audio=False)
 
 
 # Distortion Correction
