@@ -87,7 +87,7 @@ def HLS_Gradient(image):
     # Combine the two binary thresholds
     combined_binary = np.zeros_like(sxbinary)
     combined_binary[(s_binary == 1) | (sxbinary == 1)] = 1
-    return combined_binary
+    return color_binary
 
 
 def process_image(image):
@@ -96,12 +96,14 @@ def process_image(image):
     image = cv2.undistort(image, mtx, dist, None, mtx)
 
 
+    # Perspective Transform
+    image = warp_image(image, warp_matrix)
+
+
     # Convert to HLS
     # Detect Lane Pixels
     image = HLS_Gradient(image)
 
-    # Perspective Transform
-    image = warp_image(image, warp_matrix)
 
     return image
 
