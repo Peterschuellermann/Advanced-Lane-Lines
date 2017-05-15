@@ -10,8 +10,6 @@ import math # for slope calculations
 
 
 # Camera Calibration
-
-
 def calibration():
 
     images = glob.glob("camera_cal/calibration*.jpg")
@@ -35,13 +33,6 @@ def calibration():
 
     return cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
 
-
-
-def process_image(image):
-    undistorted = cv2.undistort(image, mtx, dist, None, mtx)
-    warped = warp_image(undistorted, warp_matrix)
-    return warped
-
 def generate_warp_config():
 
 
@@ -60,6 +51,18 @@ def warp_image(image, warp_matrix):
 
     return warped
 
+def process_image(image):
+
+    # Distortion Correction
+    undistorted = cv2.undistort(image, mtx, dist, None, mtx)
+
+    # Perspective Transform
+    warped = warp_image(undistorted, warp_matrix)
+
+    return warped
+
+
+
 
 
 ret, mtx, dist, rvecs, tvecs = calibration()
@@ -74,9 +77,8 @@ video_processed = video.fl_image(process_image) #NOTE: this function expects col
 video_processed.write_videofile("project_output.mp4", audio=False)
 
 
-# Distortion Correction
 
-# Perspective Transform
+
 
 # Detect Lane Pixels
 
