@@ -11,10 +11,11 @@ import math # for slope calculations
 
 # Camera Calibration
 
-images = glob.glob("camera_cal/calibration*.jpg")
 
+def calibration():
 
-def calibration(images):
+    images = glob.glob("camera_cal/calibration*.jpg")
+
     imgpoints = []
     objpoints = []
 
@@ -38,12 +39,10 @@ def calibration(images):
     return cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
 
 
-ret, mtx, dist, rvecs, tvecs = calibration(images)
+ret, mtx, dist, rvecs, tvecs = calibration()
 
-image = cv2.cvtColor(mpimg.imread(images[0]), cv2.COLOR_BGR2GRAY)
-dst = cv2.undistort(image, mtx, dist, None, mtx)
-cv2.imwrite("undistorted.jpg", dst)
-cv2.imwrite("distorted.jpg", image)
+# image = cv2.cvtColor(mpimg.imread(images[0]), cv2.COLOR_BGR2GRAY)
+# dst = cv2.undistort(image, mtx, dist, None, mtx)
 
 
 # Distortion Correction
