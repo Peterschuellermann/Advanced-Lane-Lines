@@ -167,26 +167,57 @@ def mark_lane_lines(image):
     rightx = nonzerox[right_lane_inds]
     righty = nonzeroy[right_lane_inds]
 
-    # Fit a second order polynomial to each
-    left_fit = np.polyfit(lefty, leftx, 2)
-    right_fit = np.polyfit(righty, rightx, 2)
-
     ploty = np.linspace(0, image.shape[0] - 1, image.shape[0])
-    left_fitx = left_fit[0] * ploty ** 2 + left_fit[1] * ploty + left_fit[2]
-    right_fitx = right_fit[0] * ploty ** 2 + right_fit[1] * ploty + right_fit[2]
 
     out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
     out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [0, 0, 255]
 
+    # RADIUS
+    # calculate curve radius
+    y_eval = np.max(ploty)
 
+    # Define conversions in x and y from pixels space to meters
+    ym_per_pix = 30.0 / 720  # meters per pixel in y dimension
+    xm_per_pix = 3.7 / 700  # meters per pixel in x dimension
 
-    return out_img, left_fitx, right_fitx
+    # Fit new polynomials to x,y in world space
+    left_fit_cr = np.polyfit(lefty * ym_per_pix, leftx * xm_per_pix, 2)
+    right_fit_cr = np.polyfit(righty * ym_per_pix, rightx * xm_per_pix, 2)
+    # Calculate the new radii of curvature
+    left_curverad = ((1 + (2 * left_fit_cr[0] * y_eval * ym_per_pix + left_fit_cr[1]) ** 2) ** 1.5) / np.absolute(
+        2 * left_fit_cr[0])
+    right_curverad = ((1 + (2 * right_fit_cr[0] * y_eval * ym_per_pix + right_fit_cr[1]) ** 2) ** 1.5) / np.absolute(
+        2 * right_fit_cr[0])
+    # Now our radius of curvature is in meters
+    print(left_curverad, 'm', right_curverad, 'm')
+    # Example values: 632.1 m    626.2 m
 
+    return out_img, left_curverad, right_curverad, left_fit_cr, right_fit_cr, ploty
 
-
+# def draw_lines_to_image(image, left_curverad, right_curverad, left_fit_cr, right_fit_cr, ploty, original_image, Minv):
+#     # Create an image to draw the lines on
+#     warp_zero = np.zeros_like(image).astype(np.uint8)
+#     color_warp = np.dstack((warp_zero, warp_zero, warp_zero))
+#
+#     # Recast the x and y points into usable format for cv2.fillPoly()
+#     pts_left = np.array([np.transpose(np.vstack([left_fit_cr, ploty]))])
+#     pts_right = np.array([np.flipud(np.transpose(np.vstack([right_fit_cr, ploty])))])
+#     pts = np.hstack((pts_left, pts_right))
+#
+#     # Draw the lane onto the warped blank image
+#     cv2.fillPoly(color_warp, np.int_([pts]), (0, 255, 0))
+#
+#     # Warp the blank back to original image space using inverse perspective matrix (Minv)
+#     newwarp = cv2.warpPerspective(color_warp, Minv, (image.shape[1], image.shape[0]))
+#     # Combine the result with the original image
+#     result = cv2.addWeighted(original_image, 1, newwarp, 0.3, 0)
+#     plt.imshow(result)
+#     plt.savefig("fbpdsa.jpg")
 
 
 def process_image(image):
+
+    original = image
 
     # Distortion Correction
     image = cv2.undistort(image, mtx, dist, None, mtx)
@@ -199,8 +230,9 @@ def process_image(image):
     image = warp_image(image, warp_matrix)*255
 
     # detect lane lines
-    image, left_fitx, right_fitx = mark_lane_lines(image)
+    image, left_curverad, right_curverad, left_fit_cr, right_fit_cr, ploty = mark_lane_lines(image)
 
+    # draw_lines_to_image(image, left_curverad, right_curverad, left_fit_cr, right_fit_cr, ploty, original, warp_matrix_inverse)
 
     return image
 
@@ -212,7 +244,7 @@ ret, mtx, dist, rvecs, tvecs = calibration()
 print("Generated calibration data!")
 warp_matrix, warp_matrix_inverse = generate_warp_config()
 
-test_image = mpimg.imread("test_images/test2.jpg")
+test_image = mpimg.imread("test_images/test3.jpg")
 
 test_image = process_image(test_image)
 
