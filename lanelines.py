@@ -35,12 +35,19 @@ def calibration():
 
 def generate_warp_config():
 
+    # source for corner points: https://github.com/js1972
+    corners = np.float32([[253, 697], [585, 456], [700, 456], [1061, 690]])
+    new_top_left = np.array([corners[0, 0], 0])
+    new_top_right = np.array([corners[3, 0], 0])
+    offset = [50, 0]
 
-    src = np.float32([[0, 670], [1280, 670], [0, 450], [1280, 450]])
-    dst = np.float32([[570, 220], [710, 220], [0, 0], [1280, 0]])
+    src = np.float32([corners[0], corners[1], corners[2], corners[3]])
+    dst = np.float32([corners[0] + offset, new_top_left + offset, new_top_right - offset, corners[3] - offset])
+
 
     warp_matrix = cv2.getPerspectiveTransform(src, dst)
     warp_matrix_inverse = cv2.getPerspectiveTransform(dst, src)
+
     return warp_matrix, warp_matrix_inverse
 
 
@@ -86,7 +93,7 @@ def HLS_Gradient(image):
 
     # Combine the two binary thresholds
     combined_binary = np.zeros_like(sxbinary)
-    combined_binary[(s_binary == 1) | (sxbinary == 1)] = 1
+    combined_binary[(s_binary == 1) | (sxbinary == 1)] = 255
     return color_binary
 
 
@@ -95,15 +102,12 @@ def process_image(image):
     # Distortion Correction
     image = cv2.undistort(image, mtx, dist, None, mtx)
 
-
-    # Perspective Transform
-    # image = warp_image(image, warp_matrix)
-
-
     # Convert to HLS
     # Detect Lane Pixels
     image = HLS_Gradient(image)
 
+    # Perspective Transform
+    image = warp_image(image, warp_matrix)
 
     return image
 
