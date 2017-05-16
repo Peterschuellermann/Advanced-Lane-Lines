@@ -167,6 +167,8 @@ def mark_lane_lines(image):
     rightx = nonzerox[right_lane_inds]
     righty = nonzeroy[right_lane_inds]
 
+
+
     ploty = np.linspace(0, image.shape[0] - 1, image.shape[0])
 
     out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
@@ -175,6 +177,12 @@ def mark_lane_lines(image):
     # RADIUS
     # calculate curve radius
     y_eval = np.max(ploty)
+
+    left_fit = np.polyfit(ploty, leftx, 2)
+    left_fitx = left_fit[0] * ploty ** 2 + left_fit[1] * ploty + left_fit[2]
+    right_fit = np.polyfit(ploty, rightx, 2)
+    right_fitx = right_fit[0] * ploty ** 2 + right_fit[1] * ploty + right_fit[2]
+
 
     # Define conversions in x and y from pixels space to meters
     ym_per_pix = 30.0 / 720  # meters per pixel in y dimension
@@ -192,27 +200,27 @@ def mark_lane_lines(image):
     print(left_curverad, 'm', right_curverad, 'm')
     # Example values: 632.1 m    626.2 m
 
-    return out_img, left_curverad, right_curverad, left_fit_cr, right_fit_cr, ploty
+    return out_img, left_curverad, right_curverad, left_fitx, right_fitx, lefty, righty, ploty
 
-# def draw_lines_to_image(image, left_curverad, right_curverad, left_fit_cr, right_fit_cr, ploty, original_image, Minv):
-#     # Create an image to draw the lines on
-#     warp_zero = np.zeros_like(image).astype(np.uint8)
-#     color_warp = np.dstack((warp_zero, warp_zero, warp_zero))
-#
-#     # Recast the x and y points into usable format for cv2.fillPoly()
-#     pts_left = np.array([np.transpose(np.vstack([left_fit_cr, ploty]))])
-#     pts_right = np.array([np.flipud(np.transpose(np.vstack([right_fit_cr, ploty])))])
-#     pts = np.hstack((pts_left, pts_right))
-#
-#     # Draw the lane onto the warped blank image
-#     cv2.fillPoly(color_warp, np.int_([pts]), (0, 255, 0))
-#
-#     # Warp the blank back to original image space using inverse perspective matrix (Minv)
-#     newwarp = cv2.warpPerspective(color_warp, Minv, (image.shape[1], image.shape[0]))
-#     # Combine the result with the original image
-#     result = cv2.addWeighted(original_image, 1, newwarp, 0.3, 0)
-#     plt.imshow(result)
-#     plt.savefig("fbpdsa.jpg")
+def draw_lines_to_image(image, left_fitx, right_fitx, lefty, righty, original_image, Minv):
+    # Create an image to draw the lines on
+    warp_zero = np.zeros_like(image).astype(np.uint8)
+    color_warp = np.dstack((warp_zero, warp_zero, warp_zero))
+
+    # Recast the x and y points into usable format for cv2.fillPoly()
+    pts_left = np.array([np.transpose(np.vstack([left_fitx, lefty]))])
+    pts_right = np.array([np.flipud(np.transpose(np.vstack([right_fitx, righty])))])
+    pts = np.hstack((pts_left, pts_right))
+
+    # Draw the lane onto the warped blank image
+    cv2.fillPoly(color_warp, np.int_([pts]), (0, 255, 0))
+
+    # Warp the blank back to original image space using inverse perspective matrix (Minv)
+    new_warp = cv2.warpPerspective(color_warp, Minv, (image.shape[1], image.shape[0]))
+    # Combine the result with the original image
+    result = cv2.addWeighted(original_image, 1, new_warp, 0.3, 0)
+    plt.imshow(result)
+    plt.savefig("fbpdsa.jpg")
 
 
 def process_image(image):
@@ -230,9 +238,9 @@ def process_image(image):
     image = warp_image(image, warp_matrix)*255
 
     # detect lane lines
-    image, left_curverad, right_curverad, left_fit_cr, right_fit_cr, ploty = mark_lane_lines(image)
+    image, left_curverad, right_curverad, left_fitx, right_fitx, lefty, righty, ploty = mark_lane_lines(image)
 
-    # draw_lines_to_image(image, left_curverad, right_curverad, left_fit_cr, right_fit_cr, ploty, original, warp_matrix_inverse)
+    draw_lines_to_image(image, left_fitx, right_fitx, lefty, righty, original, warp_matrix_inverse)
 
     return image
 
