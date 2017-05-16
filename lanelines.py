@@ -78,7 +78,7 @@ def HLS_Gradient(image):
     s_thresh_min = 170
     s_thresh_max = 255
     s_binary = np.zeros_like(s_channel)
-    s_binary[(s_channel >= s_thresh_min) & (s_channel <= s_thresh_max)] = 1
+    s_binary[(s_channel >= s_thresh_min) & (s_channel <= s_thresh_max)] = 255
 
     # Stack each channel to view their individual contributions in green and blue respectively
     # This returns a stack of the two binary images, whose components you can see as different colors
@@ -97,7 +97,7 @@ def process_image(image):
 
 
     # Perspective Transform
-    image = warp_image(image, warp_matrix)
+    # image = warp_image(image, warp_matrix)
 
 
     # Convert to HLS
