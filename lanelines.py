@@ -99,7 +99,7 @@ def HLS_Gradient(image):
     return combined_binary
 
 
-def mark_lane_lines(image):
+def mark_lane_lines(image, original):
 
     # Assuming you have created a warped binary image called "binary_warped"
     # Take a histogram of the bottom half of the image
@@ -178,10 +178,10 @@ def mark_lane_lines(image):
     # calculate curve radius
     y_eval = np.max(ploty)
 
-    left_fit = np.polyfit(ploty, leftx, 2)
-    left_fitx = left_fit[0] * ploty ** 2 + left_fit[1] * ploty + left_fit[2]
-    right_fit = np.polyfit(ploty, rightx, 2)
-    right_fitx = right_fit[0] * ploty ** 2 + right_fit[1] * ploty + right_fit[2]
+    # left_fit = np.polyfit(ploty, leftx, 2)
+    # left_fitx = left_fit[0] * ploty ** 2 + left_fit[1] * ploty + left_fit[2]
+    # right_fit = np.polyfit(ploty, rightx, 2)
+    # right_fitx = right_fit[0] * ploty ** 2 + right_fit[1] * ploty + right_fit[2]
 
 
     # Define conversions in x and y from pixels space to meters
@@ -197,30 +197,31 @@ def mark_lane_lines(image):
     right_curverad = ((1 + (2 * right_fit_cr[0] * y_eval * ym_per_pix + right_fit_cr[1]) ** 2) ** 1.5) / np.absolute(
         2 * right_fit_cr[0])
     # Now our radius of curvature is in meters
-    print(left_curverad, 'm', right_curverad, 'm')
+    # print(left_curverad, 'm', right_curverad, 'm')
     # Example values: 632.1 m    626.2 m
+#
+#     return out_img, left_curverad, right_curverad, left_fitx, right_fitx, lefty, righty, ploty
+#
+# def draw_lines_to_image(image, left_fitx, right_fitx, lefty, righty, original_image, Minv):
 
-    return out_img, left_curverad, right_curverad, left_fitx, right_fitx, lefty, righty, ploty
-
-def draw_lines_to_image(image, left_fitx, right_fitx, lefty, righty, original_image, Minv):
     # Create an image to draw the lines on
     warp_zero = np.zeros_like(image).astype(np.uint8)
     color_warp = np.dstack((warp_zero, warp_zero, warp_zero))
 
     # Recast the x and y points into usable format for cv2.fillPoly()
-    pts_left = np.array([np.transpose(np.vstack([left_fitx, lefty]))])
-    pts_right = np.array([np.flipud(np.transpose(np.vstack([right_fitx, righty])))])
+    pts_left = np.array([np.transpose(np.vstack([leftx, lefty]))])
+    pts_right = np.array([np.flipud(np.transpose(np.vstack([rightx, righty])))])
     pts = np.hstack((pts_left, pts_right))
 
     # Draw the lane onto the warped blank image
     cv2.fillPoly(color_warp, np.int_([pts]), (0, 255, 0))
 
     # Warp the blank back to original image space using inverse perspective matrix (Minv)
-    new_warp = cv2.warpPerspective(color_warp, Minv, (image.shape[1], image.shape[0]))
+    new_warp = cv2.warpPerspective(color_warp, warp_matrix_inverse, (image.shape[1], image.shape[0]))
     # Combine the result with the original image
-    result = cv2.addWeighted(original_image, 1, new_warp, 0.3, 0)
-    plt.imshow(result)
-    plt.savefig("fbpdsa.jpg")
+    result = cv2.addWeighted(original, 1, new_warp, 0.3, 0)
+
+    return result, left_curverad, right_curverad, lefty, righty, ploty
 
 
 def process_image(image):
@@ -238,9 +239,9 @@ def process_image(image):
     image = warp_image(image, warp_matrix)*255
 
     # detect lane lines
-    image, left_curverad, right_curverad, left_fitx, right_fitx, lefty, righty, ploty = mark_lane_lines(image)
+    image, left_curverad, right_curverad, lefty, righty, ploty = mark_lane_lines(image, original)
 
-    draw_lines_to_image(image, left_fitx, right_fitx, lefty, righty, original, warp_matrix_inverse)
+    #draw_lines_to_image(image, left_fitx, right_fitx, lefty, righty, original, warp_matrix_inverse)
 
     return image
 
@@ -258,9 +259,9 @@ test_image = process_image(test_image)
 
 mpimg.imsave("test_image.jpg", test_image)
 
-# video = VideoFileClip("project_video.mp4")
-# video_processed = video.fl_image(process_image) #NOTE: this function expects color images!!
-# video_processed.write_videofile("project_output.mp4", audio=False)
+video = VideoFileClip("project_video.mp4")
+video_processed = video.fl_image(process_image) #NOTE: this function expects color images!!
+video_processed.write_videofile("project_output.mp4", audio=False)
 
 
 
