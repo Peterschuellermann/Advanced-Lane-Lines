@@ -180,7 +180,7 @@ def mark_lane_lines(image):
 
 
 
-    return out_img
+    return out_img, left_fitx, right_fitx
 
 
 
@@ -199,7 +199,7 @@ def process_image(image):
     image = warp_image(image, warp_matrix)*255
 
     # detect lane lines
-    image = mark_lane_lines(image)
+    image, left_fitx, right_fitx = mark_lane_lines(image)
 
 
     return image
@@ -218,9 +218,9 @@ test_image = process_image(test_image)
 
 mpimg.imsave("test_image.jpg", test_image)
 
-video = VideoFileClip("project_video.mp4")
-video_processed = video.fl_image(process_image) #NOTE: this function expects color images!!
-video_processed.write_videofile("project_output.mp4", audio=False)
+# video = VideoFileClip("project_video.mp4")
+# video_processed = video.fl_image(process_image) #NOTE: this function expects color images!!
+# video_processed.write_videofile("project_output.mp4", audio=False)
 
 
 
