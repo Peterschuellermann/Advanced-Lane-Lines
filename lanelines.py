@@ -3,10 +3,8 @@
 from moviepy.editor import VideoFileClip
 import numpy as np
 import cv2
-import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import glob
-import math # for slope calculations
 
 
 # Camera Calibration
@@ -183,7 +181,6 @@ def mark_lane_lines(image, original):
     right_fit = np.polyfit(righty, rightx, 2)
     right_fitx = right_fit[0] * ploty ** 2 + right_fit[1] * ploty + right_fit[2]
 
-
     # Define conversions in x and y from pixels space to meters
     ym_per_pix = 30.0 / 720  # meters per pixel in y dimension
     xm_per_pix = 3.7 / 700  # meters per pixel in x dimension
@@ -260,7 +257,7 @@ test_image = process_image(test_image)
 mpimg.imsave("test_image2.jpg", test_image)
 
 video = VideoFileClip("project_video.mp4")
-video_processed = video.fl_image(process_image) #NOTE: this function expects color images!!
+video_processed = video.fl_image(process_image) # NOTE: this function expects color images!!
 video_processed.write_videofile("project_output.mp4", audio=False)
 
 
