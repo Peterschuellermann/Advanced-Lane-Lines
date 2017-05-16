@@ -105,7 +105,7 @@ def mark_lane_lines(image, original):
     # Take a histogram of the bottom half of the image
     histogram = np.sum(image[360:, :], axis=0)
     # Create an output image to draw on and  visualize the result
-    out_img = np.dstack((image, image, image)) * 255
+    out_img = np.dstack((image, image, image)) #* 255
     # Find the peak of the left and right halves of the histogram
     # These will be the starting point for the left and right lines
     midpoint = np.int(histogram.shape[0] / 2)
@@ -178,10 +178,10 @@ def mark_lane_lines(image, original):
     # calculate curve radius
     y_eval = np.max(ploty)
 
-    # left_fit = np.polyfit(ploty, leftx, 2)
-    # left_fitx = left_fit[0] * ploty ** 2 + left_fit[1] * ploty + left_fit[2]
-    # right_fit = np.polyfit(ploty, rightx, 2)
-    # right_fitx = right_fit[0] * ploty ** 2 + right_fit[1] * ploty + right_fit[2]
+    left_fit = np.polyfit(lefty, leftx, 2)
+    left_fitx = left_fit[0] * ploty ** 2 + left_fit[1] * ploty + left_fit[2]
+    right_fit = np.polyfit(righty, rightx, 2)
+    right_fitx = right_fit[0] * ploty ** 2 + right_fit[1] * ploty + right_fit[2]
 
 
     # Define conversions in x and y from pixels space to meters
@@ -189,8 +189,8 @@ def mark_lane_lines(image, original):
     xm_per_pix = 3.7 / 700  # meters per pixel in x dimension
 
     # Fit new polynomials to x,y in world space
-    left_fit_cr = np.polyfit(lefty * ym_per_pix, leftx * xm_per_pix, 2)
-    right_fit_cr = np.polyfit(righty * ym_per_pix, rightx * xm_per_pix, 2)
+    left_fit_cr = np.polyfit(ploty * ym_per_pix, left_fitx * xm_per_pix, 2)
+    right_fit_cr = np.polyfit(ploty * ym_per_pix, right_fitx * xm_per_pix, 2)
     # Calculate the new radii of curvature
     left_curverad = ((1 + (2 * left_fit_cr[0] * y_eval * ym_per_pix + left_fit_cr[1]) ** 2) ** 1.5) / np.absolute(
         2 * left_fit_cr[0])
@@ -257,7 +257,7 @@ test_image = mpimg.imread("test_images/test3.jpg")
 
 test_image = process_image(test_image)
 
-mpimg.imsave("test_image.jpg", test_image)
+mpimg.imsave("test_image2.jpg", test_image)
 
 video = VideoFileClip("project_video.mp4")
 video_processed = video.fl_image(process_image) #NOTE: this function expects color images!!
