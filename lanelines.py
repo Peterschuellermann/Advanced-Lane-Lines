@@ -160,7 +160,7 @@ def mark_lane_lines(image, original):
     return image, left_lane_inds, nonzerox, nonzeroy, out_img, right_lane_inds
 
 
-def calculate_radius(image, left_lane_inds, nonzerox, nonzeroy, out_img, right_lane_inds):
+def calculate_radius_and_center(image, left_lane_inds, nonzerox, nonzeroy, out_img, right_lane_inds):
 
     # Concatenate the arrays of indices
     left_lane_inds = np.concatenate(left_lane_inds)
@@ -197,7 +197,13 @@ def calculate_radius(image, left_lane_inds, nonzerox, nonzeroy, out_img, right_l
     right_curverad = ((1 + (2 * right_fit_cr[0] * y_eval * ym_per_pix + right_fit_cr[1]) ** 2) ** 1.5) / np.absolute(
         2 * right_fit_cr[0])
 
-    return left_fitx, ploty, right_fitx, left_curverad, right_curverad
+    # calculate center displacemet
+    left_distance = (left_fitx[719] * xm_per_pix)
+    right_distance = (right_fitx[719] * xm_per_pix)
+    center = (1280/2)*xm_per_pix
+    center_distance = center - (left_distance + right_distance)/2
+
+    return left_fitx, ploty, right_fitx, left_curverad, right_curverad, center_distance
 
 
 def draw_lines_to_image(image, left_fitx, original, ploty, right_fitx):
@@ -221,15 +227,21 @@ def draw_lines_to_image(image, left_fitx, original, ploty, right_fitx):
     return result
 
 
-def write_info_to_image(image, left_curverad, right_curverad):
+def write_info_to_image(image, left_curverad, right_curverad, center_distance):
     font = cv2.FONT_HERSHEY_SIMPLEX
     curve_radius = (left_curverad + right_curverad)/2
+
+    # print curve radius
     if curve_radius >= 3000.0:
         cv2.putText(image, 'straight',
                     (320, 40), font, 1, (255, 255, 255), 2)
     else:
         cv2.putText(image, 'curve radius = ' + "{0:.2f}".format(round(curve_radius, 2)) + 'm',
                 (320, 40), font, 1, (255, 255, 255), 2)
+
+    # print center distance
+    cv2.putText(image, 'center distance = ' + "{0:.2f}".format(round(center_distance, 2)) + 'm',
+                (320, 100), font, 1, (255, 255, 255), 2)
     return image
 
 
@@ -239,8 +251,7 @@ def process_image(image):
     # Distortion Correction
     image = cv2.undistort(image, mtx, dist, None, mtx)
 
-    # Convert to HLS
-    # Detect Lane Pixels
+    # Convert to HLS and detect Lane Pixels
     image = HLS_Gradient(image)
 
     # Perspective Transform
@@ -249,11 +260,15 @@ def process_image(image):
     # detect lane lines
     image, left_lane_inds, nonzerox, nonzeroy, out_img, right_lane_inds = mark_lane_lines(image, original)
 
-    left_fitx, ploty, right_fitx, left_curverad, right_curverad = calculate_radius(image, left_lane_inds, nonzerox, nonzeroy, out_img, right_lane_inds)
+    # calculate curve radius and center displacement
+    left_fitx, ploty, right_fitx, left_curverad, right_curverad, center_distance = \
+        calculate_radius_and_center(image, left_lane_inds, nonzerox, nonzeroy, out_img, right_lane_inds)
 
+    # draw area to image
     image = draw_lines_to_image(image, left_fitx, original, ploty, right_fitx)
 
-    image = write_info_to_image(image, left_curverad, right_curverad)
+    # write curve radius and center displacement to image
+    image = write_info_to_image(image, left_curverad, right_curverad, center_distance)
 
     return image
 
