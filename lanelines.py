@@ -282,8 +282,8 @@ test_image = mpimg.imread("test_images/test3.jpg")
 test_image = process_image(test_image)
 mpimg.imsave("test_image.jpg", test_image)
 
-video = VideoFileClip("project_video.mp4")
+video = VideoFileClip("harder_challenge_video.mp4")
 video_processed = video.fl_image(process_image)
-video_processed.write_videofile("project_output.mp4", audio=False)
+video_processed.write_videofile("project_output_hard2.mp4", audio=False)
 
 
