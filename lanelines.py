@@ -42,7 +42,8 @@ def generate_warp_config():
 
     warp_matrix = cv2.getPerspectiveTransform(src, dst)
     warp_matrix_inverse = cv2.getPerspectiveTransform(dst, src)
-
+    print(src)
+    print(dst)
     return warp_matrix, warp_matrix_inverse
 
 
@@ -282,8 +283,8 @@ test_image = mpimg.imread("test_images/test3.jpg")
 test_image = process_image(test_image)
 mpimg.imsave("test_image.jpg", test_image)
 
-video = VideoFileClip("project_video.mp4")
-video_processed = video.fl_image(process_image)
-video_processed.write_videofile("project_output.mp4", audio=False)
+# video = VideoFileClip("project_video.mp4")
+# video_processed = video.fl_image(process_image)
+# video_processed.write_videofile("project_output.mp4", audio=False)
 
 
