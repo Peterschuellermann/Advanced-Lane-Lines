@@ -19,7 +19,7 @@ The goals / steps of this project are the following:
 [image3]: ./output_images/HLS_image.jpg "HLS image"
 [image4]: ./output_images/HLS_warped_image.jpg "HLS warped"
 [image5]: ./output_images/histogram.jpg "Histogram"
-[image6]: ./output_images/boxes_lane_image.jpg "boxes and Lane"
+[image6]: ./output_images/boxes_lane_image.png "boxes and Lane"
 [image7]: ./output_images/final_image.jpg "Final image"
 [video1]: ./project_output.mp4 "Video"
 
@@ -93,11 +93,13 @@ The pixels are then aggregated for each of the two lane lines and given to the n
 In `calculate_radius_and_center(image, left_lane_inds, nonzerox, nonzeroy, out_img, right_lane_inds)' I use the detected points from the last function to lay a polynomial over the points and convert it from pixel space to meter space. This results in left and right curve radius.
 next I calculate the displacement from the center which is taken at the bottom of the image.
 When Plotted, the results look like this:
-[alt text][image5]
+
+![alt text][image5]
 
 #### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
 In the function `draw_lines_to_image(image, left_fitx, original, ploty, right_fitx)` I draw an area on the original image using the unwarp funcion. I also write the approximated curvature and the distance to the center line to the image, which look like this:
+
 ![alt text][image6]
 
 ---
