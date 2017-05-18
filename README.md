@@ -84,18 +84,20 @@ I verified that my perspective transform was working as expected by drawing the 
 
 #### 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
 
-Then I did some other stuff and fit my lane lines with a 2nd order polynomial kinda like this:
-
-![alt text][image5]
+In the function `detect_lane_lines` using a histogram to detect the approximate location of the lane lines, I calculate what pixels in the binary map probably belong to either lane line.
+Then I lay windows over the image and gather every activated pixel in the window.
+The pixels are then aggregated for each of the two lane lines and given to the next function describend in the next section
 
 #### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
-I did this in lines # through # in my code in `my_other_file.py`
+In `calculate_radius_and_center(image, left_lane_inds, nonzerox, nonzeroy, out_img, right_lane_inds)' I use the detected points from the last function to lay a polynomial over the points and convert it from pixel space to meter space. This results in left and right curve radius.
+next I calculate the displacement from the center which is taken at the bottom of the image.
+When Plotted, the results look like this:
+[alt text][image5]
 
 #### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
-I implemented this step in lines # through # in my code in `yet_another_file.py` in the function `map_lane()`.  Here is an example of my result on a test image:
-
+In the function `draw_lines_to_image(image, left_fitx, original, ploty, right_fitx)` I draw an area on the original image using the unwarp funcion. I also write the approximated curvature and the distance to the center line to the image, which look like this:
 ![alt text][image6]
 
 ---
@@ -104,7 +106,7 @@ I implemented this step in lines # through # in my code in `yet_another_file.py`
 
 #### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
-Here's a [link to my video result](./project_video.mp4)
+Here's a [link to my video result](./project_output.mp4)
 
 ---
 
@@ -112,4 +114,4 @@ Here's a [link to my video result](./project_video.mp4)
 
 #### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+My pipeline will likely fail, when there are large differences in lighting on the road, for example when there are lots of shadows. This could be adressed by making the hls_gradient() function more robust to color changes. Also the algorithm does not take the results of the last frames computation into consideration, which could improve the time it takes to compute the video.
