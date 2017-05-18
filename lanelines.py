@@ -42,8 +42,6 @@ def generate_warp_config():
 
     warp_matrix = cv2.getPerspectiveTransform(src, dst)
     warp_matrix_inverse = cv2.getPerspectiveTransform(dst, src)
-    print(src)
-    print(dst)
     return warp_matrix, warp_matrix_inverse
 
 
@@ -94,7 +92,7 @@ def HLS_Gradient(image):
     return combined_binary
 
 
-def mark_lane_lines(image, original):
+def detect_lane_lines(image):
     # Assuming you have created a warped binary image called "binary_warped"
     # Take a histogram of the bottom half of the image
     histogram = np.sum(image[360:, :], axis=0)
@@ -259,7 +257,7 @@ def process_image(image):
     image = warp_image(image, warp_matrix) * 255
 
     # detect lane lines
-    image, left_lane_inds, nonzerox, nonzeroy, out_img, right_lane_inds = mark_lane_lines(image, original)
+    image, left_lane_inds, nonzerox, nonzeroy, out_img, right_lane_inds = detect_lane_lines(image)
 
     # calculate curve radius and center displacement
     left_fitx, ploty, right_fitx, left_curverad, right_curverad, center_distance = \
