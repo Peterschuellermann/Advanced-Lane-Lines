@@ -1,10 +1,4 @@
-## Writeup Template
-
-### You can use this file as a template for your writeup if you want to submit it as a markdown file, but feel free to use some other method and submit a pdf if you prefer.
-
----
-
-**Advanced Lane Finding Project**
+# Advanced Lane Finding Project
 
 The goals / steps of this project are the following:
 
@@ -19,14 +13,14 @@ The goals / steps of this project are the following:
 
 [//]: # (Image References)
 
+[image0]: ./output_images/original_image.jpg "Original image"
 [image1]: ./output_images/distorted.jpg "Distorted"
-[image2]: ./output_images/distorted.jpg "Distorted"
-[image3]: ./output_images/distorted.jpg "Distorted"
-[image4]: ./output_images/distorted.jpg "Distorted"
-[image5]: ./output_images/distorted.jpg "Distorted"
-[image6]: ./output_images/distorted.jpg "Distorted"
-[image7]: ./output_images/distorted.jpg "Distorted"
-[image8]: ./output_images/distorted.jpg "Distorted"
+[image2]: ./output_images/undistorted.jpg "Undistorted"
+[image3]: ./output_images/HLS_image.jpg "HLS image"
+[image4]: ./output_images/HLS_warped_image.jpg "HLS warped"
+[image5]: ./output_images/histogram.jpg "Histogram"
+[image6]: ./output_images/boxes_lane_image.jpg "boxes and Lane"
+[image7]: ./output_images/final_image.jpg "Final image"
 [video1]: ./project_output.mp4 "Video"
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/571/view) Points
