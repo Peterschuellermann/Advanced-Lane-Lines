@@ -7,16 +7,14 @@ import matplotlib.image as mpimg
 import glob
 
 
-# Camera Calibration
 def calibration():
-
     images = glob.glob("camera_cal/calibration*.jpg")
 
     imgpoints = []
     objpoints = []
 
     objp = np.zeros((9 * 6, 3), np.float32)
-    objp[:, :2] = np.mgrid[0:9, 0:6].T.reshape(-1,2)  # x, y coordinates
+    objp[:, :2] = np.mgrid[0:9, 0:6].T.reshape(-1, 2)  # x, y coordinates
 
     for fname in images:
         img = mpimg.imread(fname)
@@ -33,7 +31,6 @@ def calibration():
 
 
 def generate_warp_config():
-
     # source for corner points: https://github.com/js1972
     corners = np.float32([[253, 697], [585, 456], [700, 456], [1061, 690]])
     new_top_left = np.array([corners[0, 0], 0])
@@ -42,7 +39,6 @@ def generate_warp_config():
 
     src = np.float32([corners[0], corners[1], corners[2], corners[3]])
     dst = np.float32([corners[0] + offset, new_top_left + offset, new_top_right - offset, corners[3] - offset])
-
 
     warp_matrix = cv2.getPerspectiveTransform(src, dst)
     warp_matrix_inverse = cv2.getPerspectiveTransform(dst, src)
@@ -98,12 +94,13 @@ def HLS_Gradient(image):
 
 
 def mark_lane_lines(image, original):
-
     # Assuming you have created a warped binary image called "binary_warped"
     # Take a histogram of the bottom half of the image
     histogram = np.sum(image[360:, :], axis=0)
+
     # Create an output image to draw on and  visualize the result
-    out_img = np.dstack((image, image, image)) #* 255
+    out_img = np.dstack((image, image, image))  # * 255
+
     # Find the peak of the left and right halves of the histogram
     # These will be the starting point for the left and right lines
     midpoint = np.int(histogram.shape[0] / 2)
@@ -112,19 +109,24 @@ def mark_lane_lines(image, original):
 
     # Choose the number of sliding windows
     nwindows = 9
+
     # Set height of windows
     window_height = np.int(image.shape[0] / nwindows)
+
     # Identify the x and y positions of all nonzero pixels in the image
     nonzero = image.nonzero()
     nonzeroy = np.array(nonzero[0])
     nonzerox = np.array(nonzero[1])
+
     # Current positions to be updated for each window
     leftx_current = leftx_base
     rightx_current = rightx_base
     # Set the width of the windows +/- margin
     margin = 100
+
     # Set minimum number of pixels found to recenter window
     minpix = 50
+
     # Create empty lists to receive left and right lane pixel indices
     left_lane_inds = []
     right_lane_inds = []
@@ -143,9 +145,9 @@ def mark_lane_lines(image, original):
         cv2.rectangle(out_img, (win_xright_low, win_y_low), (win_xright_high, win_y_high), (0, 255, 0), 2)
         # Identify the nonzero pixels in x and y within the window
         good_left_inds = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & (nonzerox >= win_xleft_low) & (
-        nonzerox < win_xleft_high)).nonzero()[0]
+            nonzerox < win_xleft_high)).nonzero()[0]
         good_right_inds = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & (nonzerox >= win_xright_low) & (
-        nonzerox < win_xright_high)).nonzero()[0]
+            nonzerox < win_xright_high)).nonzero()[0]
         # Append these indices to the lists
         left_lane_inds.append(good_left_inds)
         right_lane_inds.append(good_right_inds)
@@ -154,6 +156,11 @@ def mark_lane_lines(image, original):
             leftx_current = np.int(np.mean(nonzerox[good_left_inds]))
         if len(good_right_inds) > minpix:
             rightx_current = np.int(np.mean(nonzerox[good_right_inds]))
+
+    return image, left_lane_inds, nonzerox, nonzeroy, out_img, right_lane_inds
+
+
+def calculate_radius(image, left_lane_inds, nonzerox, nonzeroy, out_img, right_lane_inds):
 
     # Concatenate the arrays of indices
     left_lane_inds = np.concatenate(left_lane_inds)
@@ -164,18 +171,13 @@ def mark_lane_lines(image, original):
     lefty = nonzeroy[left_lane_inds]
     rightx = nonzerox[right_lane_inds]
     righty = nonzeroy[right_lane_inds]
-
-
-
     ploty = np.linspace(0, image.shape[0] - 1, image.shape[0])
-
     out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
     out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [0, 0, 255]
 
     # RADIUS
     # calculate curve radius
     y_eval = np.max(ploty)
-
     left_fit = np.polyfit(lefty, leftx, 2)
     left_fitx = left_fit[0] * ploty ** 2 + left_fit[1] * ploty + left_fit[2]
     right_fit = np.polyfit(righty, rightx, 2)
@@ -188,20 +190,18 @@ def mark_lane_lines(image, original):
     # Fit new polynomials to x,y in world space
     left_fit_cr = np.polyfit(ploty * ym_per_pix, left_fitx * xm_per_pix, 2)
     right_fit_cr = np.polyfit(ploty * ym_per_pix, right_fitx * xm_per_pix, 2)
+
     # Calculate the new radii of curvature
     left_curverad = ((1 + (2 * left_fit_cr[0] * y_eval * ym_per_pix + left_fit_cr[1]) ** 2) ** 1.5) / np.absolute(
         2 * left_fit_cr[0])
     right_curverad = ((1 + (2 * right_fit_cr[0] * y_eval * ym_per_pix + right_fit_cr[1]) ** 2) ** 1.5) / np.absolute(
         2 * right_fit_cr[0])
-    # Now our radius of curvature is in meters
-    # print(left_curverad, 'm', right_curverad, 'm')
-    # Example values: 632.1 m    626.2 m
-#
-#     return out_img, left_curverad, right_curverad, left_fitx, right_fitx, lefty, righty, ploty
-#
-# def draw_lines_to_image(image, left_fitx, right_fitx, lefty, righty, original_image, Minv):
 
-    # Create an image to draw the lines on
+    return left_fitx, ploty, right_fitx, left_curverad, right_curverad
+
+
+def draw_lines_to_image(image, left_fitx, original, ploty, right_fitx):
+
     warp_zero = np.zeros_like(image).astype(np.uint8)
     color_warp = np.dstack((warp_zero, warp_zero, warp_zero))
 
@@ -215,14 +215,13 @@ def mark_lane_lines(image, original):
 
     # Warp the blank back to original image space using inverse perspective matrix (Minv)
     new_warp = cv2.warpPerspective(color_warp, warp_matrix_inverse, (image.shape[1], image.shape[0]))
+
     # Combine the result with the original image
     result = cv2.addWeighted(original, 1, new_warp, 0.3, 0)
-
-    return result, left_curverad, right_curverad, lefty, righty, ploty
+    return result
 
 
 def process_image(image):
-
     original = image
 
     # Distortion Correction
@@ -233,41 +232,29 @@ def process_image(image):
     image = HLS_Gradient(image)
 
     # Perspective Transform
-    image = warp_image(image, warp_matrix)*255
+    image = warp_image(image, warp_matrix) * 255
 
     # detect lane lines
-    image, left_curverad, right_curverad, lefty, righty, ploty = mark_lane_lines(image, original)
+    image, left_lane_inds, nonzerox, nonzeroy, out_img, right_lane_inds = mark_lane_lines(image, original)
 
-    #draw_lines_to_image(image, left_fitx, right_fitx, lefty, righty, original, warp_matrix_inverse)
+    left_fitx, ploty, right_fitx, left_curverad, right_curverad = calculate_radius(image, left_lane_inds, nonzerox, nonzeroy, out_img, right_lane_inds)
+
+    image = draw_lines_to_image(image, left_fitx, original, ploty, right_fitx)
 
     return image
 
 
-
-
-
 ret, mtx, dist, rvecs, tvecs = calibration()
 print("Generated calibration data!")
+
 warp_matrix, warp_matrix_inverse = generate_warp_config()
 
 test_image = mpimg.imread("test_images/test3.jpg")
-
 test_image = process_image(test_image)
-
-mpimg.imsave("test_image2.jpg", test_image)
+mpimg.imsave("test_image.jpg", test_image)
 
 video = VideoFileClip("project_video.mp4")
-video_processed = video.fl_image(process_image) # NOTE: this function expects color images!!
+video_processed = video.fl_image(process_image)
 video_processed.write_videofile("project_output.mp4", audio=False)
 
 
-
-
-
-# Detect Lane Pixels
-
-# Determine Curvature
-
-# Paint Curvature onto the original image
-
-# Calculate estimation of the curve radius and print to video
