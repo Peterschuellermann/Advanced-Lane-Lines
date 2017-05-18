@@ -221,6 +221,18 @@ def draw_lines_to_image(image, left_fitx, original, ploty, right_fitx):
     return result
 
 
+def write_info_to_image(image, left_curverad, right_curverad):
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    curve_radius = (left_curverad + right_curverad)/2
+    if curve_radius >= 3000.0:
+        cv2.putText(image, 'straight',
+                    (320, 40), font, 1, (255, 255, 255), 2)
+    else:
+        cv2.putText(image, 'curve radius = ' + "{0:.2f}".format(round(curve_radius, 2)) + 'm',
+                (320, 40), font, 1, (255, 255, 255), 2)
+    return image
+
+
 def process_image(image):
     original = image
 
@@ -240,6 +252,8 @@ def process_image(image):
     left_fitx, ploty, right_fitx, left_curverad, right_curverad = calculate_radius(image, left_lane_inds, nonzerox, nonzeroy, out_img, right_lane_inds)
 
     image = draw_lines_to_image(image, left_fitx, original, ploty, right_fitx)
+
+    image = write_info_to_image(image, left_curverad, right_curverad)
 
     return image
 
